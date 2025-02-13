@@ -15,7 +15,11 @@ class MainController extends Controller
     public function index()
     {
         $id = session("user.id");
-        $notes = User::find($id)->notes()->get()->toArray();
+        $notes = User::find($id)
+                       ->notes()
+                       ->whereNull("deleted_at")
+                       ->get()
+                       ->toArray();
 
         return view("home", ["notes" => $notes]);
     }
@@ -54,6 +58,8 @@ class MainController extends Controller
     public function edit($id)
     {
         $id = Operations::decryptId($id);
+        if(!$id) return redirect()->route("home");
+
         $note = Note::find($id);
 
         return view("edit_note", ["note" => $note]);
@@ -61,11 +67,50 @@ class MainController extends Controller
 
     public function editSubmit(Request $request)
     {
+        $request->validate(
+            [
+                "text_title" => ["required", "max:200", "min:3"],
+                "text_note" => ["required", "max:3000"]
+            ],
+            [
+                "text_title.required" => "Uma anotação precisa ter um título.",
+                "text_title.min" => "O título deve ter pelo menos :min caracteres.",
+                "text_title.max" => "O título pode ter no máximo :max caracteres.",
+                "text_note.required" => "Anotação vazia!",
+                "text_note.max" => "A anotação pode ter no máximo :max caracteres."
+        ]);
 
+        if(!$request->note_id) return redirect()->to("home");
+
+        $note_id = Operations::decryptId($request->note_id);
+        if(!$note_id) return redirect()->route("home");
+        $note = Note::find($note_id);
+
+        $note->title = $request->text_title;
+        $note->text = $request->text_note;
+        $note->save();
+
+        return redirect()->route("home");
     }
 
     public function delete($id)
     {
         $id = Operations::decryptId($id);
+        if(!$id) return redirect()->route("home");
+        $note = Note::find($id);
+
+        return view("delete_note", ["note" => $note]);
+    }
+
+    public function deleteConfirm($id)
+    {
+        $id = Operations::decryptId($id);
+        if(!$id) return redirect()->route("home");
+        $note = Note::find($id);
+
+        $note->deleted_at = date("Y/m/d H:i:s");
+        $note->save();
+
+        return redirect()->route("home");
     }
 }

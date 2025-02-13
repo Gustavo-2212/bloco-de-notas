@@ -23,4 +23,5 @@ Route::middleware([CheckIsLogged::class])->group(
         Route::get("/edit/{id}", [MainController::class, "edit"])->name("edit");
         Route::post("/editSubmit", [MainController::class, "editSubmit"])->name("edit_submit");
         Route::get("/delete/{id}", [MainController::class, "delete"])->name("delete");
+        Route::get("/deleteConfirm/{id}", [MainController::class, "deleteConfirm"])->name("deleteConfirm");
 });

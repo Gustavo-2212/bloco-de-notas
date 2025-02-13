@@ -14,7 +14,7 @@ class Operations
         }
         catch(DecryptException $e)
         {
-            return redirect("home");
+            return null;
         }
 
         return $id;
